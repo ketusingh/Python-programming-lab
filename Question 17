@@ -1,0 +1,4 @@
+single = (50,)
+
+print(single)
+print(type(single))

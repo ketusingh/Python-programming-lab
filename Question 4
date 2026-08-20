@@ -1,0 +1,4 @@
+data = [45, 12, 89, 2, 67]
+
+print(max(data))
+print(min(data))

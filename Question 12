@@ -1,0 +1,10 @@
+car = {"brand": "Toyota", "model": "Camry", "year": 2022, "color": "blue"}
+
+car.pop("color")
+
+print(car.items())
+
+if "model" in car:
+    print("Key exists")
+else:
+    print("Key does not exist")
