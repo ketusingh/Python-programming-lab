@@ -1,0 +1,167 @@
+import requests
+import pandas as pd
+import streamlit as st
+import plotly.express as px
+from datetime import datetime
+
+# -------------------------------
+# PAGE CONFIGURATION
+# -------------------------------
+st.set_page_config(
+    page_title="Real-Time Weather Dashboard",
+    page_icon="🌦️",
+    layout="wide"
+)
+
+st.title("🌦️ Real-Time Weather Data Analytics Dashboard")
+st.write("Collect, analyze and visualize real-time weather data.")
+
+# -------------------------------
+# API CONFIGURATION
+# -------------------------------
+API_KEY = "YOUR_OPENWEATHERMAP_API_KEY"
+
+city = st.text_input("Enter City Name", "Nagpur")
+
+# -------------------------------
+# GET WEATHER DATA
+# -------------------------------
+def get_weather(city):
+    url = (
+        f"https://api.openweathermap.org/data/2.5/weather"
+        f"?q={city}&appid={API_KEY}&units=metric"
+    )
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
+
+# -------------------------------
+# FETCH DATA
+# -------------------------------
+if st.button("Get Weather Data"):
+
+    data = get_weather(city)
+
+    if data is None:
+        st.error("City not found or API error.")
+    else:
+
+        # Extract weather information
+        temperature = data["main"]["temp"]
+        humidity = data["main"]["humidity"]
+        rainfall = data.get("rain", {}).get("1h", 0)
+        wind_speed = data["wind"]["speed"]
+        pressure = data["main"]["pressure"]
+        description = data["weather"][0]["description"]
+
+        # -------------------------------
+        # DISPLAY CURRENT DATA
+        # -------------------------------
+        st.subheader(f"📍 Weather in {city}")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric("🌡️ Temperature", f"{temperature} °C")
+        col2.metric("💧 Humidity", f"{humidity} %")
+        col3.metric("🌧️ Rainfall", f"{rainfall} mm")
+        col4.metric("💨 Wind Speed", f"{wind_speed} m/s")
+
+        st.info(f"Current Condition: {description.title()}")
+
+        # -------------------------------
+        # CREATE DATAFRAME
+        # -------------------------------
+        weather_data = pd.DataFrame({
+            "Parameter": [
+                "Temperature",
+                "Humidity",
+                "Rainfall",
+                "Wind Speed"
+            ],
+            "Value": [
+                temperature,
+                humidity,
+                rainfall,
+                wind_speed
+            ]
+        })
+
+        # -------------------------------
+        # CHART 1 - BAR CHART
+        # -------------------------------
+        st.subheader("📊 Weather Parameter Analysis")
+
+        fig = px.bar(
+            weather_data,
+            x="Parameter",
+            y="Value",
+            title="Current Weather Parameters",
+            text="Value"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # -------------------------------
+        # CHART 2 - PIE CHART
+        # -------------------------------
+        st.subheader("📈 Weather Data Distribution")
+
+        fig2 = px.pie(
+            weather_data,
+            names="Parameter",
+            values="Value",
+            title="Weather Parameter Distribution"
+        )
+
+        st.plotly_chart(fig2, use_container_width=True)
+
+        # -------------------------------
+        # WEATHER REPORT
+        # -------------------------------
+        st.subheader("📋 Weather Report")
+
+        st.write(f"**City:** {city}")
+        st.write(f"**Temperature:** {temperature} °C")
+        st.write(f"**Humidity:** {humidity} %")
+        st.write(f"**Rainfall:** {rainfall} mm")
+        st.write(f"**Wind Speed:** {wind_speed} m/s")
+        st.write(f"**Pressure:** {pressure} hPa")
+        st.write(f"**Condition:** {description.title()}")
+        st.write(
+            f"**Updated:** "
+            f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
+        )
+
+        # -------------------------------
+        # SIMPLE ANALYSIS
+        # -------------------------------
+        st.subheader("🔎 Analysis")
+
+        if temperature > 35:
+            st.warning("High temperature detected.")
+
+        elif temperature < 15:
+            st.info("Low temperature detected.")
+
+        else:
+            st.success("Temperature is in a moderate range.")
+
+        if humidity > 70:
+            st.info("Humidity level is high.")
+
+        if rainfall > 0:
+            st.info("Rainfall has been recorded.")
+
+        if wind_speed > 10:
+            st.warning("High wind speed detected.")
+
+# -------------------------------
+# FOOTER
+# -------------------------------
+st.markdown("---")
+st.write("Real-Time Weather Data Analytics Dashboard | Python Project")
