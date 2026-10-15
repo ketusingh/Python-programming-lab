@@ -1,0 +1,37 @@
+import json
+import urllib.request
+import urllib.parse
+
+city = input("Enter city: ")
+
+try:
+    url = "https://geocoding-api.open-meteo.com/v1/search?" + urllib.parse.urlencode({"name": city, "count": 1})
+    geo = json.loads(urllib.request.urlopen(url, timeout=10).read())
+
+    place = geo["results"][0]
+    url = "https://api.open-meteo.com/v1/forecast?" + urllib.parse.urlencode({
+        "latitude": place["latitude"],
+        "longitude": place["longitude"],
+        "hourly": "temperature_2m,relative_humidity_2m",
+        "forecast_days": 1
+    })
+
+    data = json.loads(urllib.request.urlopen(url, timeout=10).read())
+    temp = data["hourly"]["temperature_2m"]
+    hum = data["hourly"]["relative_humidity_2m"]
+
+    print("\nWEATHER ANALYTICS DASHBOARD")
+    print("City:", place["name"])
+    print("Temperature:", temp[0], "°C")
+    print("Humidity:", hum[0], "%")
+    print("Average Temperature:", round(sum(temp)/len(temp), 1), "°C")
+    print("Maximum Temperature:", max(temp), "°C")
+    print("Minimum Temperature:", min(temp), "°C")
+    print("Average Humidity:", round(sum(hum)/len(hum), 1), "%")
+
+    print("\nHourly Temperature:")
+    for i in range(0, 24, 3):
+        print(data["hourly"]["time"][i], temp[i], "°C")
+
+except Exception:
+    print("City not found or internet unavailable.")
